@@ -33,53 +33,89 @@ INDICATOR_CHOICES = {
 
 TABLE_PREVIEW_ROWS = 50
 
+# Custom styles for a cleaner, modern look
+CUSTOM_CSS = """
+/* Overall page */
+.bsc-page-sidebar .bslib-sidebar-layout-main { background: #f8fafc; }
+.bsc-page-sidebar .bslib-sidebar { background: linear-gradient(180deg, #1e3a5f 0%, #0f172a 100%); }
+.bsc-page-sidebar .bslib-sidebar .bslib-sidebar-title { color: #e2e8f0 !important; font-weight: 600; }
+.bsc-page-sidebar .bslib-sidebar label { color: #cbd5e1 !important; font-size: 0.9rem; }
+.bsc-page-sidebar .bslib-sidebar .form-control, .bsc-page-sidebar .bslib-sidebar select { background: #334155; color: #f1f5f9; border-color: #475569; }
+.bsc-page-sidebar .bslib-sidebar .btn-primary { background: #0ea5e9; border-color: #0ea5e9; font-weight: 600; }
+.bsc-page-sidebar .bslib-sidebar .btn-primary:hover { background: #0284c7; border-color: #0284c7; }
+/* Section cards */
+.reporter-card { background: #fff; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; border: 1px solid #e2e8f0; }
+.reporter-card h4 { color: #1e293b; font-weight: 600; font-size: 1.1rem; margin-bottom: 0.75rem; padding-bottom: 0.5rem; border-bottom: 2px solid #0ea5e9; }
+.reporter-hero { background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%); color: #f8fafc; padding: 1.5rem 1.5rem 1.25rem; border-radius: 12px; margin-bottom: 1.5rem; }
+.reporter-hero h2 { color: #fff !important; font-weight: 700; margin-bottom: 0.35rem; }
+.reporter-hero p { color: #cbd5e1; margin: 0; font-size: 0.95rem; }
+.ai-report-box { background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%); border: 1px solid #e2e8f0; border-left: 4px solid #0ea5e9; border-radius: 8px; padding: 1.25rem; font-size: 0.95rem; line-height: 1.6; word-wrap: break-word; overflow-wrap: break-word; max-width: 100%; }
+.ai-report-box p { margin-bottom: 0.5rem; }
+.ai-report-box ul { margin: 0.5rem 0; padding-left: 1.25rem; }
+.ai-report-box strong { font-weight: 600; color: #1e293b; }
+"""
+
+
+def _card(title: str, *content):
+    """Wrap content in a styled card."""
+    return ui.div(
+        ui.h4(title, style="margin-top: 0;"),
+        *content,
+        class_="reporter-card",
+    )
+
 
 app_ui = ui.page_sidebar(
     ui.sidebar(
-        ui.h4("Query parameters"),
-        ui.input_select(
-            "countries",
-            "Countries",
-            choices={code: label for code, label in DEFAULT_COUNTRIES},
-            selected=[c[0] for c in DEFAULT_COUNTRIES],
-            multiple=True,
+        ui.div(
+            ui.h4("⚙️ Query parameters", style="color: #e2e8f0; margin-bottom: 1rem;"),
+            ui.input_select(
+                "countries",
+                "Countries",
+                choices={code: label for code, label in DEFAULT_COUNTRIES},
+                selected=[c[0] for c in DEFAULT_COUNTRIES],
+                multiple=True,
+            ),
+            ui.input_select(
+                "indicator",
+                "Indicator",
+                choices=INDICATOR_CHOICES,
+                selected="NY.GDP.PCAP.CD",
+            ),
+            ui.input_numeric("start_year", "Start year", value=2010, min=1960, max=2030),
+            ui.input_numeric("end_year", "End year", value=2024, min=1960, max=2030),
+            ui.input_numeric("per_page", "Per page (API)", value=20000, min=1, max=20000),
+            ui.tags.hr(style="border-color: #475569; margin: 1rem 0;"),
+            ui.input_action_button("run_query_btn", "▶ Run Query", class_="btn-primary", style="width: 100%;"),
         ),
-        ui.input_select(
-            "indicator",
-            "Indicator",
-            choices=INDICATOR_CHOICES,
-            selected="NY.GDP.PCAP.CD",
-        ),
-        ui.input_numeric("start_year", "Start year", value=2010, min=1960, max=2030),
-        ui.input_numeric("end_year", "End year", value=2024, min=1960, max=2030),
-        ui.input_numeric("per_page", "Per page (API)", value=20000, min=1, max=20000),
-        ui.tags.hr(),
-        ui.input_action_button("run_query_btn", "Run Query", class_="btn-primary"),
+        title="Controls",
         width=300,
     ),
-    ui.h2("AI-Powered Reporter"),
-    ui.p(
-        "Query the World Bank API, view data in the table and chart, then generate an AI summary. "
-        "Choose parameters and click **Run Query**, then **Generate AI Report**."
+    ui.div(
+        ui.tags.style(CUSTOM_CSS),
+        ui.div(
+            ui.h2("📊 AI-Powered Reporter"),
+            ui.p(
+                "Query the World Bank API, view data in the table and chart, then generate an AI summary. "
+                "Choose parameters and click Run Query, then Generate AI Report."
+            ),
+            class_="reporter-hero",
+        ),
+        _card("Status", ui.output_ui("status")),
+        _card("Summary", ui.output_ui("summary")),
+        _card(
+            "Data (first 50 rows)",
+            ui.output_data_frame("table"),
+            ui.tags.div(ui.output_ui("download_ui"), style="margin-top: 1rem;"),
+        ),
+        _card("Time series", ui.output_plot("line_plot")),
+        _card(
+            "AI Report",
+            ui.output_ui("ai_report_ui"),
+            ui.output_ui("ai_report_text"),
+        ),
+        style="max-width: 960px; margin: 0 auto; padding: 0 1rem 2rem;",
     ),
-    ui.tags.hr(),
-    ui.h4("Status"),
-    ui.output_ui("status"),
-    ui.tags.hr(),
-    ui.h4("Summary"),
-    ui.output_ui("summary"),
-    ui.tags.hr(),
-    ui.h4("Data (first 50 rows)"),
-    ui.output_data_frame("table"),
-    ui.tags.hr(),
-    ui.output_ui("download_ui"),
-    ui.tags.hr(),
-    ui.h4("Time series (line chart)"),
-    ui.output_plot("line_plot"),
-    ui.tags.hr(),
-    ui.h4("AI Report"),
-    ui.output_ui("ai_report_ui"),
-    ui.output_ui("ai_report_text"),
 )
 
 
@@ -151,13 +187,15 @@ def server(input: reactive.Inputs, output: reactive.Outputs, session: reactive.S
     @render.ui
     def status() -> ui.TagList:
         key_ok, key_msg = get_api_key_status()
-        items = [ui.p(ui.tags.strong("API key: "), key_msg)]
+        items = []
+        if key_ok:
+            items.append(ui.p(ui.tags.strong("API key: "), key_msg))
         err = result_error.get()
         if err:
             items.append(ui.div(ui.tags.strong("Error: "), err, class_="text-danger"))
         elif result_df.get() is not None:
             items.append(ui.div("Query completed successfully.", class_="text-success"))
-        return ui.TagList(items)
+        return ui.TagList(items) if items else ui.p("Ready.")
 
     @output
     @render.ui
@@ -212,15 +250,24 @@ def server(input: reactive.Inputs, output: reactive.Outputs, session: reactive.S
             return None
         try:
             import matplotlib.pyplot as plt
-            fig, ax = plt.subplots(figsize=(10, 5))
-            for country in plot_df["country_name"].unique():
+            for s in ("seaborn-v0_8-whitegrid", "seaborn-whitegrid"):
+                try:
+                    plt.style.use(s)
+                    break
+                except OSError:
+                    continue
+            fig, ax = plt.subplots(figsize=(10, 5), facecolor="#fafafa")
+            fig.patch.set_facecolor("#fafafa")
+            colors = ["#0ea5e9", "#8b5cf6", "#ec4899", "#f59e0b", "#10b981", "#6366f1", "#14b8a6"]
+            for i, country in enumerate(plot_df["country_name"].unique()):
                 sub = plot_df[plot_df["country_name"] == country].sort_values("year")
-                ax.plot(sub["year"], sub["value"], label=country, marker="o", markersize=3)
-            ax.set_xlabel("Year")
-            ax.set_ylabel("Value")
-            ax.set_title("Time series by country")
-            ax.legend(bbox_to_anchor=(1.02, 1), loc="upper left", fontsize=8)
-            ax.grid(True, alpha=0.3)
+                c = colors[i % len(colors)]
+                ax.plot(sub["year"], sub["value"], label=country, marker="o", markersize=4, color=c, linewidth=2)
+            ax.set_xlabel("Year", fontsize=11)
+            ax.set_ylabel("Value", fontsize=11)
+            ax.set_title("Time series by country", fontsize=12, fontweight="600")
+            ax.legend(bbox_to_anchor=(1.02, 1), loc="upper left", fontsize=9)
+            ax.set_facecolor("#fafafa")
             plt.tight_layout()
             return fig
         except Exception:
@@ -243,7 +290,10 @@ def server(input: reactive.Inputs, output: reactive.Outputs, session: reactive.S
         report = ai_report.get()
         if report is None:
             return ui.TagList()
-        return ui.div(ui.pre(report), style="white-space: pre-wrap; background: #f5f5f5; padding: 1em; border-radius: 6px;")
+        try:
+            return ui.div(ui.markdown(report), class_="ai-report-box")
+        except Exception:
+            return ui.div(ui.pre(report, style="margin: 0; font-size: inherit;"), class_="ai-report-box")
 
 
 with suppress(ImportError):

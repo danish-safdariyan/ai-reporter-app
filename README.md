@@ -12,8 +12,10 @@ One app: query a public API, display data in a Shiny interface, and use AI to ge
 
 ```bash
 cd ai_reporter_app
-pip install shiny pandas requests matplotlib python-dotenv
+pip install shiny pandas requests matplotlib python-dotenv markdown-it-py
 ```
+
+(`markdown-it-py` is used to render the AI report as formatted text instead of raw Markdown.)
 
 Optional: copy `.env.example` to `.env` and set `WORLD_BANK_API_KEY`, `OLLAMA_API_KEY`, or `OPENAI_API_KEY` if needed.
 
