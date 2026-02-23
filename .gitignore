@@ -1,0 +1,23 @@
+# Environment and keys (never commit)
+.env
+.env.local
+*.env
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+.venv/
+venv/
+env/
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
+
+# Shiny / build
+*.egg-info/
+dist/
+build/
