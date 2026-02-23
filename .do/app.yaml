@@ -1,0 +1,11 @@
+# DigitalOcean App Platform — deploy from this repo
+# See: https://docs.digitalocean.com/products/app-platform/reference/app-spec/
+name: ai-reporter-app
+region: nyc
+
+services:
+  - name: web
+    environment_slug: python
+    run_command: shiny run app.py --host 0.0.0.0 --port 8080
+    http_port: 8080
+    source_dir: /

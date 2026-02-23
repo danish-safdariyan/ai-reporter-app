@@ -1,0 +1,7 @@
+# AI-Powered Reporter — dependencies for DigitalOcean App Platform / local run
+shiny
+pandas
+requests
+matplotlib
+python-dotenv
+markdown-it-py
