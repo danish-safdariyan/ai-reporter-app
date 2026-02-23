@@ -17,6 +17,9 @@ env/
 .vscode/
 .DS_Store
 
+# Word temp files
+~$*
+
 # Shiny / build
 *.egg-info/
 dist/
